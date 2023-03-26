@@ -23,15 +23,25 @@ class BigramLanguageModel(nn.Module):
         return logits, loss
 
     def generate(self, batch, max_new_tokens):
+        """
+        Takes a batch of samples in the shape (B,T) where:
+            B (batch) samples to run in parallel
+            T (time) sequence of tokens to be used as context
+                to predict the next token
+
+        Concatenates the result to the sequence T, max_new_tokens times;
+            to be used in the next iteration.
+        """
         for _ in range(max_new_tokens):
-            # make some predictions
+            # feed forward
             logits, loss = self(batch)
-            # grab the last token in the sequence
+            # grab the last token in each sequence (for now)
             logits = logits[:, -1, :]  # (B,C)
-            # apply softmax to get probabilities of each prediction
+            # apply softmax to get probabilities for each token
             probs = F.softmax(logits, dim=-1)  # (B,C)
             # sample from the distribution
-            next_batch = torch.multinomial(probs, num_samples=1)  # (B,1)
-            # append sampled index to the sequence
-            batch = torch.cat((batch, next_batch), dim=1)  # (B,T+1)
+            predictions = torch.multinomial(probs, num_samples=1)  # (B,1)
+            # append sampled prediction to the sequence,
+            # creating a new batch for the next iteration
+            batch = torch.cat((batch, predictions), dim=1)  # (B,T+1)
         return batch
