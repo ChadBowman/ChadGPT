@@ -1,5 +1,5 @@
-import pathlib
 from setuptools import setup, find_packages
+import pathlib
 
 HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
@@ -16,6 +16,7 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
-        "torch ~= 2.0.0"
+        "torch ~= 2.0.0",
+        "numpy ~= 1.24.2"
     ]
 )
