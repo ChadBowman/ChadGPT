@@ -1,7 +1,7 @@
-from char_tokenizer import CharTokenizer
-from bigramlanguagemodel import BigramLanguageModel
-import torch
 import logging
+import torch
+from char_tokenizer import CharTokenizer
+from lm import BigramLanguageModel
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +30,7 @@ class Train:
     def train(self):
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.learning_rate)
         model = self.model.to(self.device)
+        log.info(f"training model on {next(model.parameters()).device}")
 
         for step in range(self.max_iters):
             # evaluate losses on train and validation set periodically
@@ -78,15 +79,18 @@ text = None
 with open("data/shakespeare.txt", "r") as f:
     text = f.read()
 
+block_size = 8
 tokenizer = CharTokenizer(text=text)
-model = BigramLanguageModel(tokenizer.vocab_n)
+model = BigramLanguageModel(vocab_size=tokenizer.vocab_n,
+                            block_size=block_size,
+                            n_embed=32)
 train = Train(model, tokenizer,
               batch_size=32,
-              block_size=8,
-              max_iters=30000,
-              eval_interval=3000,
+              block_size=block_size,
+              max_iters=50000,
+              eval_interval=500,
               eval_iters=200,
-              learning_rate=1e-2)
+              learning_rate=1e-3)
 
 # train the model
 train.set_data(text)

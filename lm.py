@@ -1,16 +1,29 @@
 import torch
 import torch.nn as nn
+from head import Head
 from torch.nn import functional as F
 
 
 class BigramLanguageModel(nn.Module):
-    def __init__(self, vocab_size):
+    def __init__(self, *, vocab_size, block_size, n_embed):
         super().__init__()
-        self.token_embedding_table = nn.Embedding(vocab_size, vocab_size)
+        self.block_size = block_size
+        # each token directly reads off the logits for the next token from a lookup table
+        self.token_embedding_table = nn.Embedding(vocab_size, n_embed)
+        self.position_embedding_table = nn.Embedding(block_size, n_embed)
+        self.sa_head = Head(n_embed=n_embed, head_size=n_embed, block_size=block_size)
+        self.lm_head = nn.Linear(n_embed, vocab_size)
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def forward(self, batch, targets=None):
+        B, T = batch.shape
         # batch and targets are both (B,T) tensor
-        logits = self.token_embedding_table(batch)  # (B,T,C)
+        token_emb = self.token_embedding_table(batch)  # (B,T,C)
+        pos_emb = self.position_embedding_table(torch.arange(T, device=self.device))  # (T,C)
+        x = token_emb + pos_emb  # (B,T,C)
+        x = self.sa_head(x)  # apply one head of self-attn (B,T,C)
+        logits = self.lm_head(x)  # (B, T, vocab_size)
+
         # B is the batch dimension
         # T is is the time dimension (a training vector, sequence of tokens)
         # C is the channel (the score of each next token, the prediction)
@@ -33,8 +46,10 @@ class BigramLanguageModel(nn.Module):
             to be used in the next iteration.
         """
         for _ in range(max_new_tokens):
+            # truncate batch to the last block_size tokens
+            batch_truncated = batch[:, -self.block_size:]
             # feed forward
-            logits, loss = self(batch)
+            logits, loss = self(batch_truncated)
             # grab the last token in each sequence (for now)
             logits = logits[:, -1, :]  # (B,C)
             # apply softmax to get probabilities for each token
