@@ -12,6 +12,9 @@ class MultiHeadAttention(nn.Module):
             head_size=head_size,
             block_size=block_size
         ) for _ in range(num_heads)])
+        self.proj = nn.Linear(num_heads * head_size, n_embed)
 
     def forward(self, x):
-        return torch.cat([h(x) for h in self.heads], dim=-1)
+        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        out = self.proj(out)
+        return out
