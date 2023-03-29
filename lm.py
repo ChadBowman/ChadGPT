@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-from feed_forward import FeedForward
-from multi_head_attention import MultiHeadAttention
+from block import Block
 from torch.nn import functional as F
 
 
@@ -11,12 +10,15 @@ class BigramLanguageModel(nn.Module):
         self.block_size = block_size
         # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, n_embed)
-        self.position_embedding_table = nn.Embedding(block_size, n_embed)
-        num_heads = 4
-        self.sa_heads = MultiHeadAttention(num_heads=num_heads, n_embed=n_embed, head_size=n_embed // 4, block_size=block_size)
-        self.ffwd = FeedForward(n_embed)
-        self.lm_head = nn.Linear(n_embed, vocab_size)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.position_embedding_table = nn.Embedding(block_size, n_embed)
+        n_heads = 4
+        self.blocks = nn.Sequential(
+            Block(n_embed, n_heads, block_size),
+            Block(n_embed, n_heads, block_size),
+            Block(n_embed, n_heads, block_size)
+        )
+        self.lm_head = nn.Linear(n_embed, vocab_size)
 
     def forward(self, batch, targets=None):
         B, T = batch.shape
@@ -24,8 +26,7 @@ class BigramLanguageModel(nn.Module):
         token_emb = self.token_embedding_table(batch)  # (B,T,C)
         pos_emb = self.position_embedding_table(torch.arange(T, device=self.device))  # (T,C)
         x = token_emb + pos_emb  # (B,T,C)
-        x = self.sa_heads(x)  # apply one head of self-attn (B,T,C)
-        x = self.ffwd(x)  # (B,T,C)
+        x = self.blocks(x)  # (B,T,C)
         logits = self.lm_head(x)  # (B,T,vocab_size)
 
         # B is the batch dimension
