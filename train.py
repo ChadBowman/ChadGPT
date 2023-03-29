@@ -82,7 +82,9 @@ block_size = 8
 tokenizer = CharTokenizer(text=text)
 model = BigramLanguageModel(vocab_size=tokenizer.vocab_n,
                             block_size=block_size,
-                            n_embed=32)
+                            n_embed=32,
+                            n_layer=3,
+                            dropout=0.2)
 train = Train(model, tokenizer,
               batch_size=32,
               block_size=block_size,

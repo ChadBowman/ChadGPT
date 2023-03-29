@@ -5,7 +5,7 @@ from torch.nn import functional as F
 
 
 class BigramLanguageModel(nn.Module):
-    def __init__(self, *, vocab_size, block_size, n_embed):
+    def __init__(self, *, vocab_size, block_size, n_embed, n_layer, dropout):
         super().__init__()
         self.block_size = block_size
         # each token directly reads off the logits for the next token from a lookup table
@@ -13,11 +13,8 @@ class BigramLanguageModel(nn.Module):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.position_embedding_table = nn.Embedding(block_size, n_embed)
         n_heads = 4
-        self.blocks = nn.Sequential(
-            Block(n_embed, n_heads, block_size),
-            Block(n_embed, n_heads, block_size),
-            Block(n_embed, n_heads, block_size)
-        )
+        self.blocks = nn.Sequential(*[Block(n_embed, n_heads, block_size, dropout) for _ in range(n_layer)])
+        self.ln_f = nn.LayerNorm(n_embed)
         self.lm_head = nn.Linear(n_embed, vocab_size)
 
     def forward(self, batch, targets=None):
@@ -27,6 +24,7 @@ class BigramLanguageModel(nn.Module):
         pos_emb = self.position_embedding_table(torch.arange(T, device=self.device))  # (T,C)
         x = token_emb + pos_emb  # (B,T,C)
         x = self.blocks(x)  # (B,T,C)
+        x = self.ln_f(x)  # (B,T,C)
         logits = self.lm_head(x)  # (B,T,vocab_size)
 
         # B is the batch dimension

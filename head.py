@@ -5,12 +5,13 @@ from torch.nn import functional as F
 
 class Head(nn.Module):
     """ A head of self-attention """
-    def __init__(self, *, n_embed, head_size, block_size):
+    def __init__(self, *, n_embed, head_size, block_size, dropout):
         super().__init__()
         self.key = nn.Linear(n_embed, head_size, bias=False)
         self.query = nn.Linear(n_embed, head_size, bias=False)
         self.value = nn.Linear(n_embed, head_size, bias=False)
         self.register_buffer("tril", torch.tril(torch.ones(block_size, block_size)))
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         B, T, C = x.shape
@@ -26,6 +27,7 @@ class Head(nn.Module):
         weights = weights.masked_fill(self.tril[:T, :T] == 0, float("-inf"))  # (B, T, T)
         # softmax to normalize to probability
         weights = F.softmax(weights, dim=-1)
+        weights = self.dropout(weights)
         # perform the weighted aggregation of the values
         v = self.value(x)  # (B, T, C)
         out = weights @ v  # (B, T, T) @ (B, T, C) -> (B, T, C)
