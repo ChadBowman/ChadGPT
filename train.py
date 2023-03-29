@@ -78,20 +78,21 @@ class Train:
 text = None
 with open("data/shakespeare.txt", "r") as f:
     text = f.read()
-block_size = 8
+block_size = 256
 tokenizer = CharTokenizer(text=text)
 model = BigramLanguageModel(vocab_size=tokenizer.vocab_n,
                             block_size=block_size,
-                            n_embed=32,
-                            n_layer=3,
+                            n_heads=6,
+                            n_embed=384,
+                            n_layer=6,
                             dropout=0.2)
 train = Train(model, tokenizer,
-              batch_size=32,
+              batch_size=64,
               block_size=block_size,
               max_iters=5000,
               eval_interval=500,
               eval_iters=200,
-              learning_rate=1e-3)
+              learning_rate=3e-4)
 
 # train the model
 train.set_data(text)

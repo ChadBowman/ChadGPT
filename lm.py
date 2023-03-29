@@ -5,14 +5,13 @@ from torch.nn import functional as F
 
 
 class BigramLanguageModel(nn.Module):
-    def __init__(self, *, vocab_size, block_size, n_embed, n_layer, dropout):
+    def __init__(self, *, vocab_size, block_size, n_heads, n_embed, n_layer, dropout):
         super().__init__()
         self.block_size = block_size
         # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, n_embed)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.position_embedding_table = nn.Embedding(block_size, n_embed)
-        n_heads = 4
         self.blocks = nn.Sequential(*[Block(n_embed, n_heads, block_size, dropout) for _ in range(n_layer)])
         self.ln_f = nn.LayerNorm(n_embed)
         self.lm_head = nn.Linear(n_embed, vocab_size)
