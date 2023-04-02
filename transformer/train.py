@@ -1,10 +1,7 @@
 import logging
 import torch
-from char_tokenizer import CharTokenizer
-from lm import BigramLanguageModel
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 class Train:
@@ -73,34 +70,3 @@ class Train:
             out[split] = losses.mean()
         self.model.train()
         return out
-
-
-text = None
-with open("data/shakespeare.txt", "r") as f:
-    text = f.read()
-block_size = 256
-tokenizer = CharTokenizer(text=text)
-model = BigramLanguageModel(vocab_size=tokenizer.vocab_n,
-                            block_size=block_size,
-                            n_heads=6,
-                            n_embed=384,
-                            n_layer=6,
-                            dropout=0.2)
-train = Train(model, tokenizer,
-              batch_size=64,
-              block_size=block_size,
-              max_iters=5000,
-              eval_interval=500,
-              eval_iters=200,
-              learning_rate=3e-4)
-
-# train the model
-train.set_data(text)
-model = train.train()
-
-# generate from model
-# start with 0 (probably newline character)
-seed_batch = torch.zeros((1, 1), dtype=torch.long, device=train.device)
-result = model.generate(seed_batch, max_new_tokens=500)[0].tolist()
-result = tokenizer.decode(result)
-print(result)

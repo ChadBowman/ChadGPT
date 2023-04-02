@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
-from block import Block
+from .block import Block
 from torch.nn import functional as F
 
 
-class BigramLanguageModel(nn.Module):
+class Transformer(nn.Module):
     def __init__(self, *, vocab_size, block_size, n_heads, n_embed, n_layer, dropout):
         super().__init__()
         self.block_size = block_size
