@@ -5,18 +5,17 @@ log = logging.getLogger(__name__)
 
 
 class Train:
-    def __init__(self, model, tokenizer, *,
-                 batch_size, block_size, max_iters,
-                 eval_interval, eval_iters, learning_rate):
-        self.model = model
+    def __init__(self, tokenizer, model, *, batch_size, max_iters,
+                 learning_rate, eval_interval, eval_iters, device):
         self.tokenizer = tokenizer
+        self.model = model
+        self.block_size = model.block_size
         self.batch_size = batch_size
-        self.block_size = block_size
         self.max_iters = max_iters
+        self.learning_rate = learning_rate
         self.eval_interval = eval_interval
         self.eval_iters = eval_iters
-        self.learning_rate = learning_rate
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = device
 
     def set_data(self, text, *, split_pro=0.9):
         data = torch.tensor(self.tokenizer.encode(text), dtype=torch.long)

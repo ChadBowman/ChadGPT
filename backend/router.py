@@ -1,17 +1,22 @@
 import os
 import torch
-from .service import build_trainer, load_model
+from .service import build_trainer, build_model, save_model, shake_tokenizer
 from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import JSONResponse
-from transformer.tokenizers.char_tokenizer import BASIC
-from transformer.transformer import Transformer
 
 dataset = APIRouter(prefix="/ds")
 lang_model = APIRouter(prefix="/lm")
+model_cache = {}
 
 
 def response(message):
     return JSONResponse(content={"message": message})
+
+
+@dataset.get("")
+def get_datasets():
+    path = os.path.join("datasets", "input")
+    return JSONResponse(content=os.listdir(path))
 
 
 @dataset.post("/upload")
@@ -24,23 +29,9 @@ def upload_dataset(file: UploadFile = File(...)):
     return response(f"{file.filename} dataset saved")
 
 
-@lang_model.post("/{name}")
-def create_model(name: str, body: dict):
-    """
-    hyperparameters
-    version
-    """
-    hyperparams = body.get("hyperparameters")
-    if not hyperparams:
-        raise Exception("hyperparameters required")
-
-    version = body.get("version", "0.1.0")
-    name = f"{name}V{version}.pt"
-    file_path = os.path.join("models", name)
-    model = Transformer(**hyperparams)
-    torch.save(model.state_dict(), file_path)
-
-    return response(f"{name} created")
+@lang_model.get("")
+def get_models():
+    return JSONResponse(content=os.listdir("models"))
 
 
 @lang_model.post("/{name}/train")
@@ -48,7 +39,6 @@ async def train_model(name: str, body: dict):
     """
     dataset
     tokenizer
-    model
     hyperparameters
         batch_size
         block_size
@@ -59,18 +49,23 @@ async def train_model(name: str, body: dict):
     """
     dataset = body.get("dataset", "shakespeare")
     tokenizer = body.get("tokenizer", "character")
-    model = body.get("model")
     hyperparams = body.get("hyperparameters")
-    if not hyperparams:
-        raise Exception("hyperparameters required")
+    hyperparams["device"] = "cuda" if torch.cuda.is_available() else "cpu"
+
+    model = build_model(hyperparams)
     trainer = build_trainer(dataset, tokenizer, model, hyperparams)
     trainer.train()
+
+    save_model(model, name)
+    model_cache[name] = model
+
+    return response(f"{name} trained")
 
 
 @lang_model.get("/{name}/eval")
 def eval_model(name: str, tokens: int = 1000):
-    model = load_model(name)
+    model = model_cache.get(name)
     seed = torch.zeros((1, 1), dtype=torch.long, device=model.device)
     result = model.generate(seed, max_new_tokens=tokens)[0].tolist()
-    result = BASIC.decode(result)
+    result = shake_tokenizer.decode(result)
     return response(result)

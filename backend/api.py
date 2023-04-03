@@ -2,7 +2,7 @@ import logging
 from fastapi import FastAPI
 from .router import dataset, lang_model
 
-logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
 app.include_router(dataset)

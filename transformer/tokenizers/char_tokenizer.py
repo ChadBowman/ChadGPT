@@ -15,7 +15,3 @@ class CharTokenizer:
         if text is None:
             raise Exception("No text available to genearte tokenizer")
         return sorted(list(set(text)))
-
-
-basic_vocab = "\n !$&',-.3:;?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-BASIC = CharTokenizer(vocab=[c for c in basic_vocab])
