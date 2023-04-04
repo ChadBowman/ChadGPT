@@ -1,4 +1,4 @@
-http POST :8000/lm/small/train \
+http POST :8000/lm/test/train \
     dataset=shakespeare.txt \
     tokenizer=char \
     hyperparameters:='{

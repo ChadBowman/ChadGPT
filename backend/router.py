@@ -68,4 +68,4 @@ def eval_model(name: str, tokens: int = 1000):
     seed = torch.zeros((1, 1), dtype=torch.long, device=model.device)
     result = model.generate(seed, max_new_tokens=tokens)[0].tolist()
     result = shake_tokenizer.decode(result)
-    return response(result)
+    return JSONResponse(content={"paragraphs": result.split("\n")})
