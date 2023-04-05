@@ -1,6 +1,6 @@
 import os
 import torch
-from .service import build_trainer, build_model, save_model, shake_tokenizer
+from .service import build_trainer, build_model, save_model, shake_tokenizer, load_model
 from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import JSONResponse
 
@@ -56,7 +56,7 @@ async def train_model(name: str, body: dict):
     trainer = build_trainer(dataset, tokenizer, model, hyperparams)
     trainer.train()
 
-    save_model(model, name)
+    save_model(model, name, hyperparams)
     model_cache[name] = model
 
     return response(f"{name} trained")
@@ -65,6 +65,8 @@ async def train_model(name: str, body: dict):
 @lang_model.get("/{name}/eval")
 def eval_model(name: str, tokens: int = 1000):
     model = model_cache.get(name)
+    if not model:
+        model = load_model(name)
     seed = torch.zeros((1, 1), dtype=torch.long, device=model.device)
     result = model.generate(seed, max_new_tokens=tokens)[0].tolist()
     result = shake_tokenizer.decode(result)
