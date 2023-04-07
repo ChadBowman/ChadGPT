@@ -5,8 +5,19 @@ log = logging.getLogger(__name__)
 
 
 class Train:
+    """Primary training object"""
     def __init__(self, tokenizer, model, *, batch_size, max_iters,
                  learning_rate, eval_interval, eval_iters, device):
+        """Parameters:
+            tokenizer (Tokenizer): tokenizer to use
+            model (Transformer): language model to train
+            batch_size (int): How many examples each head processes in parellel
+            max_iters (int): The number of training iterations
+            learning_rate (float): How agressive backpropagation should run
+            eval_interval (int): How many training iterations should run between each preformance check
+            eval_iters (int): How many iterations to run in the preformance check
+            device (str): Device to use (cpu or cuda)
+        """
         self.tokenizer = tokenizer
         self.model = model
         self.block_size = model.block_size
@@ -18,12 +29,19 @@ class Train:
         self.device = device
 
     def set_data(self, text, *, split_pro=0.9):
+        """Set dataset to train on
+
+        Parameters:
+            text (str): text to train on
+            split_pro (float): proportion of training set vs validation set
+        """
         data = torch.tensor(self.tokenizer.encode(text), dtype=torch.long)
         n = int(split_pro * len(data))
         self.train_data = data[:n]
         self.val_data = data[n:]
 
     def train(self):
+        """Train model"""
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.learning_rate)
         model = self.model.to(self.device)
         log.info(f"training model on {next(model.parameters()).device}")
@@ -45,6 +63,7 @@ class Train:
         return model
 
     def _generate_batch(self, split):
+        """Generates batch of training data"""
         data = self.train_data if split == "train" else self.val_data
         # get batch_size number of random integers to sample from
         idxs = torch.randint(len(data) - self.block_size, (self.batch_size,))

@@ -20,7 +20,7 @@ class Block(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    """ multiple heads of self-attention in parallel """
+    """ Multiple heads of self-attention in parallel """
     def __init__(self, n_heads, n_embed, head_size, block_size, dropout):
         super().__init__()
         self.heads = nn.ModuleList([Head(
@@ -39,6 +39,7 @@ class MultiHeadAttention(nn.Module):
 
 
 class FeedForward(nn.Module):
+    """Simple feed-forward neural network"""
     def __init__(self, n_embed, dropout):
         super().__init__()
         self.net = nn.Sequential(

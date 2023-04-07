@@ -1,4 +1,6 @@
 class CharTokenizer:
+    """Tokenizes text by character"""
+
     def __init__(self, *, vocab=None, text=None):
         self.vocab = vocab or self._parse_vocab(text)
         self.vocab_n = len(self.vocab)
@@ -13,5 +15,5 @@ class CharTokenizer:
 
     def _parse_vocab(self, text):
         if text is None:
-            raise Exception("No text available to genearte tokenizer")
+            raise Exception("No text available to generate tokenizer")
         return sorted(list(set(text)))

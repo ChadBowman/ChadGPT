@@ -19,5 +19,5 @@ app.add_middleware(
 
 
 @app.get("/", tags=["root"])
-async def root() -> dict:
-    return {"message": "Welcome"}
+async def root() -> str:
+    return "Welcome to ChadGPT"

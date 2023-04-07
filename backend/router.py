@@ -9,18 +9,20 @@ lang_model = APIRouter(prefix="/lm")
 model_cache = {}
 
 
-def response(message):
-    return JSONResponse(content={"message": message})
-
-
-@dataset.get("")
+@dataset.get("", tags=["dataset"])
 def get_datasets():
+    """Returns a collection of dataset names"""
     path = os.path.join("datasets", "input")
     return JSONResponse(content=os.listdir(path))
 
 
-@dataset.post("/upload")
+@dataset.post("/upload", tags=["dataset"])
 def upload_dataset(file: UploadFile = File(...)):
+    """Upload a new dataset file
+
+    Parameters:
+    file (File): file to upload
+    """
     file_path = os.path.join("datasets", "input", file.filename)
 
     with open(file_path, "wb") as buffer:
@@ -29,23 +31,37 @@ def upload_dataset(file: UploadFile = File(...)):
     return response(f"{file.filename} dataset saved")
 
 
-@lang_model.get("")
+@lang_model.get("", tags=["model"])
 def get_models():
+    """Returns a collection of saved language model names"""
     return JSONResponse(content=os.listdir("models"))
 
 
-@lang_model.post("/{name}/train")
+@lang_model.post("/{name}/train", tags=["model"])
 async def train_model(name: str, body: dict):
-    """
-    dataset
-    tokenizer
-    hyperparameters
-        batch_size
-        block_size
-        max_iters
-        eval_interval
-        eval_iters
-        learning_rate
+    """Trains language model, saves model to file.
+
+    Parameters:
+    name (str): name of model
+    body (str): JSON object, expected format example:
+
+        {
+            "dataset": "shakespeare.txt",
+            "tokenizer": "character",
+            "hyperparameters": {
+                "vocab_size": 65,
+                "block_size": 32,
+                "n_heads": 3,
+                "n_embed": 96,
+                "n_layer": 3,
+                "dropout": 0.2,
+                "batch_size": 4,
+                "max_iters": 100,
+                "learning_rate": 1e-4,
+                "eval_interval": 500,
+                "eval_iters": 1000
+            }
+        }
     """
     dataset = body.get("dataset", "shakespeare")
     tokenizer = body.get("tokenizer", "character")
@@ -62,8 +78,18 @@ async def train_model(name: str, body: dict):
     return response(f"{name} trained")
 
 
-@lang_model.get("/{name}/eval")
+@lang_model.get("/{name}/eval", tags=["model"])
 def eval_model(name: str, tokens: int = 1000, split_newlines=False):
+    """Evaluates language model
+
+    Parameters:
+    name (str): name of model
+    token (int): number of tokens to generate
+    split_newlines (bool): returns a newline split array if true
+
+    Returns:
+    The model's output up to {tokens} length.
+    """
     model = model_cache.get(name)
     if not model:
         model = load_model(name)
@@ -73,3 +99,7 @@ def eval_model(name: str, tokens: int = 1000, split_newlines=False):
     if split_newlines:
         result = result.split("\n")
     return JSONResponse(content={"eval": result})
+
+
+def response(message):
+    return JSONResponse(content={"message": message})

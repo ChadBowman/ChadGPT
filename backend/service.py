@@ -14,10 +14,12 @@ param_map = {}
 
 
 def model_path(name: str):
+    """Get the models path location"""
     return os.path.join("models", f"{name}")
 
 
 def save_params():
+    """Save model parameters to file"""
     with open(csv_path, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=["name", *model_params])
         writer.writeheader()
@@ -26,17 +28,20 @@ def save_params():
 
 
 def load_params():
+    """Load model parameters from file"""
     with open(csv_path, newline="") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             name = row["name"]
             del row["name"]
-            ints = {k: int(v) for k, v in row.items() if "." not in v and "cpu" not in v}
+            ints = {k: int(v) for k, v in row.items()
+                    if "." not in v and "c" not in v}
             floats = {k: float(v) for k, v in row.items() if "." in v}
             param_map[name] = {**ints, **floats, "device": row["device"]}
 
 
 def load_model(model_name: str):
+    """Load model from file"""
     state = torch.load(model_path(model_name))
     load_params()
     hyperparams = param_map[model_name]
@@ -47,6 +52,7 @@ def load_model(model_name: str):
 
 
 def save_model(model: Transformer, model_name: str, hyperparams: dict):
+    """Save model to file"""
     torch.save(model.state_dict(), model_path(model_name))
     hyperparams = {key: hyperparams[key] for key in model_params if key in hyperparams}
     param_map[model_name] = hyperparams
@@ -54,12 +60,14 @@ def save_model(model: Transformer, model_name: str, hyperparams: dict):
 
 
 def build_model(hyperparams: dict):
+    """Build new model"""
     hyperparams = {key: hyperparams[key] for key in model_params if key in hyperparams}
     model = Transformer(**hyperparams)
     return model
 
 
 def build_trainer(dataset_name, tokenizer_name, model, hyperparams):
+    """Build new training object"""
     # TODO actually use dataset_name, custom tokenizer
     dataset_path = os.path.join("datasets", "input", "shakespeare.txt")
     with open(dataset_path, "r") as file:

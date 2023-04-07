@@ -5,7 +5,18 @@ from torch.nn import functional as F
 
 
 class Transformer(nn.Module):
+    """The top-level transformer object"""
+
     def __init__(self, *, vocab_size, block_size, n_heads, n_embed, n_layer, dropout, device):
+        """Parameters:
+            vocab_size (int): The number of different tokens in the model's vocabulary
+            block_size (int): The span of sequential tokens to use in each example (AKA context size)
+            n_heads (int): The number of attention "heads" working in parallel
+            n_embed (int): The size of the embedding dimension
+            n_layer (int): The number of sequential attention layers
+            dropout (float): The proportion of nodes to "dropout" during training
+            device (str): Device to use (cpu or cuda)
+        """
         super().__init__()
         self.block_size = block_size
         self.device = device
@@ -38,7 +49,8 @@ class Transformer(nn.Module):
         return logits, loss
 
     def generate(self, batch, max_new_tokens):
-        """
+        """Evaluates the model, generating tokens
+
         Takes a batch of samples in the shape (B,T) where:
             B (batch) samples to run in parallel
             T (time) sequence of tokens to be used as context
@@ -46,13 +58,17 @@ class Transformer(nn.Module):
 
         Concatenates the result to the sequence T, max_new_tokens times;
             to be used in the next iteration.
+
+        Parameters:
+        batch (Tensor): initial tensor used as context for the next token
+        max_new_tokens (int): number of tokens to generate
         """
         for _ in range(max_new_tokens):
             # truncate batch to the last block_size tokens
             batch_truncated = batch[:, -self.block_size:]
-            # feed forward
+            # evaluate
             logits, loss = self(batch_truncated)
-            # grab the last token in each sequence (for now)
+            # grab the last token in each sequence
             logits = logits[:, -1, :]  # (B,C)
             # apply softmax to get probabilities for each token
             probs = F.softmax(logits, dim=-1)  # (B,C)
