@@ -28,7 +28,7 @@ export default function Evals() {
             console.error("No model available")
             return
         }
-        const response = await fetch(`http://localhost:8000/lm/${targetModel}/eval?tokens=1000`)
+        const response = await fetch(`http://localhost:8000/lm/${targetModel}/eval?tokens=1000?split_newlines=true`)
         const evals = await response.json()
         setEvals(evals.paragraphs)
     }

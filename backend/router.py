@@ -63,11 +63,13 @@ async def train_model(name: str, body: dict):
 
 
 @lang_model.get("/{name}/eval")
-def eval_model(name: str, tokens: int = 1000):
+def eval_model(name: str, tokens: int = 1000, split_newlines=False):
     model = model_cache.get(name)
     if not model:
         model = load_model(name)
     seed = torch.zeros((1, 1), dtype=torch.long, device=model.device)
     result = model.generate(seed, max_new_tokens=tokens)[0].tolist()
     result = shake_tokenizer.decode(result)
-    return JSONResponse(content={"paragraphs": result.split("\n")})
+    if split_newlines:
+        result = result.split("\n")
+    return JSONResponse(content={"eval": result})
