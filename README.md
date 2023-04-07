@@ -47,7 +47,7 @@ Optional front-end:
 docker run -p 3000:3000 chadbowman0/chadgpt-frontend:latest
 ```
 
-Visit the [/docs](localhost:8000/docs) endpoint to see the API in full. Current operations are:
+Visit the [/docs](http://localhost:8000/docs) endpoint to see the API in full. Current operations are:
 * GET `/ds` get datasets
 * POST `/ds/upload` upload new dataset
 * GET `/lm` get language models
@@ -67,7 +67,7 @@ npm install -g serve
 serve -s build
 ```
 
-### Tokeizers
+### Tokenizers
 Currently only the character tokenizer is available.
 
 ### Datasets
@@ -81,12 +81,12 @@ The hyperparameters available for training are:
 * `n_head`: The number of attention "heads" working in parallel
 * `block_size`: The span of sequential tokens to use in each example (AKA context size)
 * `dropout`: The proportion of nodes to "dropout" during training
-* `learning_rate`: How agressive backpropagation should run
+* `learning_rate`: How aggressive backpropagation should run
 * `max_iters`: The number of training iterations
-* `batch_size`: How many examples each head processes in parellel
+* `batch_size`: How many examples each head processes in parallel
 * `vocab_size`: The number of different tokens in the model's vocabulary
-* `eval_interval`: How many training iterations should run between each preformance check
-* `eval_iters`: How many iterations to run in the preformance check
+* `eval_interval`: How many training iterations should run between each performance check
+* `eval_iters`: How many iterations to run in the performance check
 
 ## Requests / UI
 The [requests](https://github.com/ChadBowman/ChadGPT/blob/master/requests) directory contains a couple curl commands for convenience. They also contain reasonable hyperparameter values for various devices. Alternatively, you can use the front-end:
@@ -95,4 +95,4 @@ The [requests](https://github.com/ChadBowman/ChadGPT/blob/master/requests) direc
 
 ## Pre-trained models
 Current models you can interact with are:
-* Shakespeare (comes from Andrej's tutorial)
+* shakespeare (comes from Andrej's tutorial)
