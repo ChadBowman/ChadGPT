@@ -15,7 +15,7 @@ function App() {
             <Header />
             <HStack spacing="20px" ml={10}>
                 <Eval />
-                {/* <Train /> hide for now */}
+                <Train />
             </HStack>
         </ChakraProvider>
     )
