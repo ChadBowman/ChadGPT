@@ -1,9 +1,11 @@
+import logging
 import os
 import torch
 from .service import build_trainer, build_model, save_model, shake_tokenizer, load_model
 from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import JSONResponse
 
+log = logging.getLogger(__name__)
 dataset = APIRouter(prefix="/ds")
 lang_model = APIRouter(prefix="/lm")
 model_cache = {}
@@ -34,7 +36,8 @@ def upload_dataset(file: UploadFile = File(...)):
 @lang_model.get("", tags=["model"])
 def get_models():
     """Returns a collection of saved language model names"""
-    return JSONResponse(content=os.listdir("models"))
+    models = list(filter(lambda item: ".csv" not in item, os.listdir("models")))
+    return JSONResponse(content=models)
 
 
 @lang_model.post("/{name}/train", tags=["model"])
@@ -63,6 +66,7 @@ async def train_model(name: str, body: dict):
             }
         }
     """
+    log.info(f"training {name}")
     dataset = body.get("dataset", "shakespeare")
     tokenizer = body.get("tokenizer", "character")
     hyperparams = body.get("hyperparameters")
@@ -90,6 +94,7 @@ def eval_model(name: str, tokens: int = 1000, split_newlines=False):
     Returns:
     The model's output up to {tokens} length.
     """
+    log.info(f"generating {tokens} tokens using the {name} model")
     model = model_cache.get(name)
     if not model:
         model = load_model(name)

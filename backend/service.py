@@ -42,10 +42,12 @@ def load_params():
 
 def load_model(model_name: str):
     """Load model from file"""
-    state = torch.load(model_path(model_name))
+    local_device_setting = "cuda" if torch.cuda.is_available() else "cpu"
+    state = torch.load(model_path(model_name), map_location=torch.device(local_device_setting))
     load_params()
     hyperparams = param_map[model_name]
     hyperparams = {key: hyperparams[key] for key in model_params if key in hyperparams}
+    hyperparams["device"] = local_device_setting  # override whatever is in the file
     model = Transformer(**hyperparams)
     model.load_state_dict(state)
     return model

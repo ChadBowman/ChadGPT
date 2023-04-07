@@ -14,8 +14,8 @@ function App() {
         <ChakraProvider>
             <Header />
             <HStack spacing="20px" ml={10}>
-                <Eval />
                 <Train />
+                <Eval />
             </HStack>
         </ChakraProvider>
     )

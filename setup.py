@@ -3,10 +3,11 @@ import pathlib
 
 HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
+VERSION = "0.1.0"
 
 setup(
     name="chadgpt",
-    version="0.1.0",
+    version=VERSION,
     author="Chad Bowman",
     author_email="chad.bowman0+github@gmail.com",
     description="My own decoder-only transformer",

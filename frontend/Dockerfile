@@ -3,6 +3,6 @@ FROM node:16-alpine
 COPY . /app/
 WORKDIR /app
 
-RUN npm install && npm run build
+RUN npm install && npm run build && npm install -g serve
 
-CMD ["npm", "run", "start"]
+CMD ["serve", "-s", "build"]

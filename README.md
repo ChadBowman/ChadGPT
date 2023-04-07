@@ -67,6 +67,12 @@ npm install -g serve
 serve -s build
 ```
 
+### Tokeizers
+Currently only the character tokenizer is available.
+
+### Datasets
+Currently only the complete works of Shakespeare dataset is included.
+
 ### Hyperparameters
 
 The hyperparameters available for training are:
@@ -85,7 +91,7 @@ The hyperparameters available for training are:
 ## Requests / UI
 The [requests](https://github.com/ChadBowman/ChadGPT/blob/master/requests) directory contains a couple curl commands for convenience. They also contain reasonable hyperparameter values for various devices. Alternatively, you can use the front-end:
 
-![frontend](https://github.com/ChadBowman/ChadGPT/blob/master/assets/fontend.png)
+![ui](https://github.com/ChadBowman/ChadGPT/blob/master/assets/ui.png)
 
 ## Pre-trained models
 Current models you can interact with are:
