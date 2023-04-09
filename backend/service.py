@@ -2,15 +2,22 @@ import csv
 import os
 import torch
 import logging
-from transformer.tokenizer import TikTokenTokenizer, CharTokenizer
+from transformer.tokenizer import TikTokenTokenizer, CharTokenizer, WordTokenizer
 from transformer.train import Train
 from transformer.transformer import Transformer
+
+
+def get_text():
+    with open("datasets/input/shakespeare.txt", "r") as file:
+        return file.read()
+
 
 log = logging.getLogger(__name__)
 shake_vocab = "\n !$&',-.3:;?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 tokenizers = {
     "tiktoken": TikTokenTokenizer(encoding="r50k_base"),
-    "character": CharTokenizer(vocab=[c for c in shake_vocab])
+    "character": CharTokenizer(vocab=[c for c in shake_vocab]),
+    "word": WordTokenizer(text=get_text())
 }
 model_params = ["vocab_size", "block_size", "n_heads", "n_embed", "n_layer", "dropout", "device"]
 train_params = ["batch_size", "max_iters", "learning_rate", "eval_interval", "eval_iters", "device"]
