@@ -1,7 +1,7 @@
 import logging
 import os
 import torch
-from .service import build_trainer, build_model, save_model, shake_tokenizer, load_model
+from .service import build_trainer, build_model, save_model, tokenizers, load_model, param_map
 from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import JSONResponse
 
@@ -68,15 +68,17 @@ async def train_model(name: str, body: dict):
     """
     log.info(f"training {name}")
     dataset = body.get("dataset", "shakespeare")
-    tokenizer = body.get("tokenizer", "character")
+    tokenizer_name = body.get("tokenizer", "character")
     hyperparams = body.get("hyperparameters")
     hyperparams["device"] = "cuda" if torch.cuda.is_available() else "cpu"
+    tokenizer = tokenizers[tokenizer_name]
+    hyperparams["vocab_size"] = tokenizer.n_vocab
 
     model = build_model(hyperparams)
-    trainer = build_trainer(dataset, tokenizer, model, hyperparams)
+    trainer = build_trainer(dataset, tokenizer_name, model, hyperparams)
     trainer.train()
 
-    save_model(model, name, hyperparams)
+    save_model(model, name, hyperparams, tokenizer_name)
     model_cache[name] = model
 
     return response(f"{name} trained")
@@ -100,7 +102,8 @@ def eval_model(name: str, tokens: int = 1000, split_newlines=False):
         model = load_model(name)
     seed = torch.zeros((1, 1), dtype=torch.long, device=model.device)
     result = model.generate(seed, max_new_tokens=tokens)[0].tolist()
-    result = shake_tokenizer.decode(result)
+    tokenizer = param_map[name]["tokenizer"]
+    result = tokenizers[tokenizer].decode(result)
     if split_newlines:
         result = result.split("\n")
     return JSONResponse(content={"eval": result})
